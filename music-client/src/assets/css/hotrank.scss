@@ -1,0 +1,129 @@
+.container {
+  display: flex;
+  justify-content: center; // 🔹 整体居中
+  margin: 40px auto; // 🔹 顶部间距保持40px，左右自动居中
+  width: 1150px; // 保持固定宽度，也可改成max-width
+  gap: 40px; // 🔹 三栏之间的间距
+
+  .container-left {
+    width: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    .rank-type {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      span {
+        cursor: pointer;
+        width: 120px;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+        border-radius: 12px;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        font-weight: 500;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateX(5px) scale(1.05);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+
+    span.active {
+      background-color: #ccc;
+      color: #fff;
+      font-weight: 600;
+      transform: scale(1.08);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .container-right {
+    flex: 1;
+    margin-left: 40px;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+
+    .rank-detail {
+      flex: 10; // 左边大部分
+      display: flex;
+      flex-direction: column;
+    }
+
+    .recommend-box {
+      flex: 1; // 右边瘦子
+      display: flex;
+      flex-direction: column;
+
+      .recommend-card {
+        border-radius: 10px;
+        padding: 10px;
+        overflow-y: auto;
+
+        h2 {
+          font-size: 18px;
+          margin-bottom: 10px;
+          white-space: nowrap; // 保证标题横向显示
+        }
+
+        .recommend-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column; // 歌曲竖着排列
+          gap: 6px;
+
+          li {
+            cursor: pointer;
+            display: flex; // 保证名字横向显示
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+
+            &:hover {
+              color: #409eff;
+            }
+
+            .song-name {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis; // 超长显示省略号
+            }
+          }
+        }
+      }
+    }
+
+    .cover-info {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      margin-bottom: 20px;
+
+      .el-image {
+        border-radius: 20px;
+        width: 250px;
+        height: 250px;
+        flex-shrink: 0;
+      }
+
+      .box-card {
+        border-radius: 10px;
+        flex: 1;
+        height: 250px;
+      }
+    }
+
+    .songlist-wrapper {
+      flex: 1;
+    }
+  }
+}

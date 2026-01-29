@@ -1,0 +1,105 @@
+@import "@/assets/css/var.scss";
+@import "@/assets/css/global.scss";
+
+/* 大屏幕布局 */
+@media screen and (min-width: $sm) {
+  .sign {
+    width: 380px;
+    position: absolute;
+    left: 60vw;
+    top: $header-height + 80px;
+  }
+}
+
+/* 小屏幕布局 */
+@media screen and (max-width: $sm) {
+  .sign {
+    width: 80vw;
+    position: relative;
+    margin: 20vh auto 0;
+  }
+}
+
+/* 登录框玻璃拟态效果 */
+.sign {
+  padding: 40px 30px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(4, 4, 4, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  text-align: center;
+  color: #000;
+
+  .sign-head {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: #000;
+  }
+
+  /* 输入框美化 */
+  :deep(.el-input__inner) {
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    outline: none;
+    padding: 12px 15px;
+    font-size: 15px;
+  }
+
+  :deep(.el-form-item__label) {
+    color: #000 !important;
+    font-weight: bold; // 跟 sign-head 保持一致
+    min-width: 70px; // 手动定个宽度，够放最长的文字
+    font-size: 15px; // 可以跟输入框文字协调
+  }
+
+  /* 按钮区域 */
+  .sign-btn:deep(.el-form-item__content) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 20px;
+
+    button {
+      flex: 1;
+      margin: 5px;
+      border-radius: 12px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .el-button--primary {
+      background: rgba(90, 195, 240, 0.85);
+      border: none;
+    }
+
+    .el-button--primary:hover {
+      background: rgba(63, 63, 63, 0.82);
+      color: #fff;
+    }
+  }
+
+  /* 下方文字链接 */
+  .sign-links {
+    position: absolute;
+    left: 20px;
+    bottom: 15px;
+    display: flex;
+    gap: 20px;
+
+    .link {
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .link:hover {
+      color: #409eff; /* Element Plus 主色 */
+      text-decoration: underline;
+    }
+  }
+}
