@@ -1,3 +1,4 @@
+#本地启动docker desktop之后，启动容器command：docker-compose up -d
 services:
   mysql:
     image: mysql:8.0
