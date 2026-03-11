@@ -14,9 +14,7 @@
 }
 
 .post-list {
-  flex: 0 0 20%;
-  border-right: 1px solid #eee;
-  padding-right: 15px;
+  width: 20%;
 }
 
 .list-header {
@@ -83,18 +81,26 @@
 .post-list {
   display: flex;
   flex-direction: column;
+  height: 100%;             // 关键：让 post-list 撑满父容器高度
+  overflow: hidden;         // 关键：防止内容溢出
 
   .list-header {
     padding: 10px;
+    border-bottom: 1px solid #eee; // UI优化：加个底边线
   }
 
   .list-body {
-    padding: 0 10px;
+    flex: 1;                // 关键：让 list-body 占据所有剩余空间
+    overflow-y: auto;       // 关键：当内容超长时，允许 list-body 内部滚动
+    padding: 10px;
   }
 
   .pagination {
-    margin-top: 15px;  // 控制和上面内容的间距
+    padding: 10px 0;       // UI优化：给分页控件一些内边距
+    background: #fff;       // UI优化：给个背景色，避免透明
+    border-top: 1px solid #eee; // UI优化：加个上边线
     display: flex;
     justify-content: center;
+    margin-bottom: 70px;
   }
 }
