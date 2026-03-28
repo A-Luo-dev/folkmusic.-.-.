@@ -4,7 +4,7 @@
       <yin-icon :icon="iconList.ZHEDIE" @click="toggle = !toggle"></yin-icon>
     </div>
     <!--播放进度-->
-    <el-slider class="progress" v-model="nowTime" @change="changeTime" size="small"></el-slider>
+    <el-slider class="progress" v-model="sliderValue" @input="handleSliderInput" @change="handleSliderChange" size="small"></el-slider>
     <div class="control-box">
       <div class="info-box">
         <!-- 歌曲图片 -->
@@ -146,6 +146,8 @@ export default defineComponent({
       startTime: "00:00",
       endTime: "00:00",
       nowTime: 0, // 进度条的位置
+      sliderValue: 0,
+      isDragging: false,
       toggle: true,
       volume: 50,
       playState: Icon.XUNHUAN,
@@ -192,10 +194,14 @@ export default defineComponent({
     },
     // 播放时间的开始和结束
     curTime() {
+      if (this.isDragging) {
+        return;
+      }
       this.startTime = formatSeconds(this.curTime);
       this.endTime = formatSeconds(this.duration);
-      // 移动进度条
-      this.nowTime = (this.curTime / this.duration) * 100;
+      const progress = (this.curTime / this.duration) * 100;
+      this.nowTime = progress;
+      this.sliderValue = progress;
     },
     // 自动播放下一首
     autoNext() {
@@ -232,8 +238,12 @@ export default defineComponent({
       }
       this.$store.commit("setIsPlay", this.isPlay ? false : true);
     },
-    changeTime() {
-      this.$store.commit("setChangeTime", this.duration * (this.nowTime * 0.01));
+    handleSliderInput() {
+      this.isDragging = true;
+    },
+    handleSliderChange(value) {
+      this.isDragging = false;
+      this.$store.commit("setChangeTime", this.duration * (value / 100));
     },
     changePlayState() {
       this.playStateIndex = this.playStateIndex >= this.playStateList.length - 1 ? 0 : ++this.playStateIndex;

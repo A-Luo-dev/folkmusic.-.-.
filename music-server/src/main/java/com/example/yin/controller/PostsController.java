@@ -34,17 +34,16 @@ public class PostsController {
     private ConsumerService consumerService; // ✅ 你的用户服务
 
     /**
-     * 获取所有帖子列表
-     * GET /posts
+     * 获取所有帖子列表 (真搜索与真分页)
+     * GET /posts?keyword=xxx&pageNum=1&pageSize=5
      */
     @GetMapping
-    public List<PostSummaryVO> getAll() {
-        System.out.println("获取所有帖子列表");
-        List<PostSummaryVO> posts = postsService.getAllPosts();
-        System.out.println("返回帖子数量: " + posts.size());
-        return posts;
+    public Map<String, Object> getAll(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "5") Integer pageSize) {
+        return postsService.getAllPosts(keyword, pageNum, pageSize);
     }
-
 
     /**
      * 获取帖子详情（含附件与评论）
@@ -60,6 +59,7 @@ public class PostsController {
         System.out.println("返回帖子详情: " + vo);
         return vo;
     }
+
 
     @PostMapping
     public Map<String, Object> create(@RequestHeader(value = "X-User-Id", required = false) Long userId,

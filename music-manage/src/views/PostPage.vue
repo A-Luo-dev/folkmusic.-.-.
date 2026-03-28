@@ -129,10 +129,16 @@ export default defineComponent({
     // 获取所有帖子
     async function getData() {
       try {
-        const result = await axios.get("http://localhost:8888/posts");
+        const result = await axios.get("http://localhost:8888/posts", {
+          params: {
+            pageNum: 1,
+            pageSize: 10000 // 后台管理为了配合前端假分页，直接拉取全部（或者您可以将后台也改成真分页）
+          }
+        });
         console.log("获取到的帖子数据:", result.data);
-        tableData.value = result.data;
-        tempDate.value = result.data;
+        // 注意：因为后端接口改成了真分页，返回结构是 { records: [...], total: ... }
+        tableData.value = result.data.records || [];
+        tempDate.value = result.data.records || [];
         currentPage.value = 1;
       } catch (error) {
         console.error("获取帖子列表失败:", error);

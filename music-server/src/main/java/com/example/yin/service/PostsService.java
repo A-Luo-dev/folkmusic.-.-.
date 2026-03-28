@@ -7,6 +7,7 @@ import com.example.yin.model.vo.PostDetailVO;
 import com.example.yin.model.vo.PostSummaryVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -24,5 +25,5 @@ public interface PostsService extends IService<Posts> {
 
     void deletePost(Long postId, Long operatorUserId, boolean isAdmin);
 
-    List<PostSummaryVO> getAllPosts();  // 新增的方法
+    Map<String, Object> getAllPosts(String keyword, Integer pagenum, Integer pagesize);  // 新增的方法
 }

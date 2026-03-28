@@ -11,13 +11,15 @@
           size="small"
           class="search-box"
           suffix-icon="el-icon-search"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
         />
       </div>
 
       <!-- 帖子列表：去掉 el-scrollbar，直接展示 -->
       <div class="list-body">
         <el-card
-          v-for="post in filteredPosts"
+          v-for="post in posts"
           :key="post.postId"
           class="post-item"
           :class="{ selected: selectedPostId === post.postId }"
@@ -51,8 +53,9 @@
         <el-pagination
           background
           layout="prev, pager, next"
-          :total="totalPosts"
+          :total="total"
           :page-size="pageSize"
+          @current-change="handleCurrentChange"
           v-model:current-page="currentPage"
         />
       </div>
@@ -212,6 +215,7 @@ export default {
       userId: null,
       searchKeyword: "",
       selectedPostId: null,
+      total: 0, // 用于记录数据库中符合条件的帖子总数
 
     // 🔑 分页参数
     currentPage: 1,   // 当前页
@@ -224,36 +228,33 @@ export default {
     };
   },
 computed: {
-  filteredPosts() {
-    let result = this.posts;
-    if (this.searchKeyword.trim()) {
-      result = result.filter(
-        (p) =>
-          p.title.includes(this.searchKeyword) ||
-          p.content.includes(this.searchKeyword)
-      );
-    }
-    // 🔑 做分页裁切
-    const start = (this.currentPage - 1) * this.pageSize;
-    const end = this.currentPage * this.pageSize;
-    return result.slice(start, end);
-  },
 
-  totalPosts() {
-    if (!this.searchKeyword.trim()) return this.posts.length;
-    return this.posts.filter(
-      (p) =>
-        p.title.includes(this.searchKeyword) ||
-        p.content.includes(this.searchKeyword)
-    ).length;
-  },
 },
 methods: {
+  //点击搜索或者回车会刷新一次帖子列表
+  handleSearch() {
+    this.currentPage = 1;
+    this.fetchPosts();
+  },
+
+  //点击分页会刷新一次帖子列表
+  handleCurrentChange() {
+    this.fetchPosts();
+  },
+  
+
   async fetchPosts() {
     try {
-      const res = await axios.get("/posts");
-      console.log("获取到的帖子数据:", res.data);
-      this.posts = res.data;
+      const res = await axios.get("/posts", {
+        params: {
+          keyword: this.searchKeyword.trim(), // 搜索关键字
+          pageNum: this.currentPage,          // 当前页
+          pageSize: this.pageSize             // 每页条数
+        }
+      });
+      console.log("获取到的帖子分页数据:", res.data);
+      this.posts = res.data.records;
+      this.total = res.data.total;
     } catch (err) {
       console.error("获取帖子列表失败:", err);
       ElMessage.error("获取帖子列表失败");
@@ -261,7 +262,6 @@ methods: {
   },
 
   async selectPost(postId) {
-    this.selectedPostId = postId;
     try {
       const res = await axios.get(`/posts/${postId}`);
       console.log("获取到的帖子详情:", res.data);

@@ -2,6 +2,7 @@ package com.example.yin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.yin.mapper.PostsMapper;
 import com.example.yin.model.domain.PostAttachments;
 import com.example.yin.model.domain.PostComments;
@@ -13,11 +14,15 @@ import com.example.yin.service.PostAttachmentsService;
 import com.example.yin.service.PostCommentsService;
 import com.example.yin.service.PostsService;
 import lombok.RequiredArgsConstructor;
+//import org.springframework.data.domain.Page;
+import org.springframework.util.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import com.alibaba.fastjson.JSON;
@@ -92,83 +97,90 @@ public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements
 
 
     @Override
-    public List<PostSummaryVO> getAllPosts() {
-        List<Posts> posts = this.list(
-                new LambdaQueryWrapper<Posts>()
-                        .orderByDesc(Posts::getCreatedAt) // 按创建时间倒序
-        );
+    public Map<String, Object> getAllPosts(String keyword, Integer pageNum, Integer pageSize) {
 
-        return posts.stream().map(p -> {
-            PostSummaryVO vo = new PostSummaryVO();
-            vo.setPostId(p.getPostId());
-            vo.setTitle(p.getTitle());
-            // 截取前 50 字做摘要（可改）
-            String content = p.getContent();
-            if (content != null && content.length() > 50) {
-                content = content.substring(0, 50) + "...";
+        Page<Posts> page = new Page<>(pageNum,pageSize);
+
+        LambdaQueryWrapper<Posts> wrapper = new LambdaQueryWrapper<>();
+            if (StringUtils.hasText(keyword)) {
+                // SQL 相当于: WHERE title LIKE '%keyword%' OR content LIKE '%keyword%'
+                wrapper.like(Posts::getTitle, keyword)
+                        .or()
+                        .like(Posts::getContent, keyword);
             }
-            vo.setContent(content);
-            vo.setUserId(p.getUserId());
-            vo.setLikeCount(p.getLikeCount());
-            
-            // 实时统计评论数
-            long actualCommentCount = postCommentsService.count(
-                new LambdaQueryWrapper<PostComments>()
-                    .eq(PostComments::getPostId, p.getPostId())
-            );
-            vo.setCommentCount((int) actualCommentCount);
-            System.out.println("帖子 " + p.getPostId() + " 评论数: " + actualCommentCount);
-            
-            // 实时统计附件数
-            long actualAttachmentCount = postAttachmentsService.count(
-                new LambdaQueryWrapper<PostAttachments>()
-                    .eq(PostAttachments::getPostId, p.getPostId())
-            );
-            vo.setAttachmentCount((int) actualAttachmentCount);
-            System.out.println("帖子 " + p.getPostId() + " 附件数: " + actualAttachmentCount);
-            
-            vo.setViewCount(p.getViewCount());
-            vo.setCreatedAt(p.getCreatedAt());
-            System.out.println("帖子 " + p.getPostId() + " 创建时间: " + p.getCreatedAt());
-            
-            // 设置标签
-            if (p.getTags() != null && !p.getTags().trim().isEmpty()) {
-                try {
-                    List<String> tags = JSON.parseArray(p.getTags(), String.class);
-                    vo.setTags(tags);
-                    System.out.println("解析标签: " + p.getTags() + " -> " + tags);
-                } catch (Exception e) {
-                    System.err.println("标签解析失败: " + p.getTags() + ", 错误: " + e.getMessage());
+            // 按时间倒序
+            wrapper.orderByDesc(Posts::getCreatedAt);
+
+            // 3. 执行分页查询 (这步操作会发出两条SQL：一条查count总数，一条带LIMIT查当前页数据)
+            Page<Posts> postPage = this.page(page, wrapper);
+
+            // 4. 将查出来的实体列表转换为前端需要的 VO 列表
+            List<PostSummaryVO> voList = postPage.getRecords().stream().map(p -> {
+                PostSummaryVO vo = new PostSummaryVO();
+                vo.setPostId(p.getPostId());
+                vo.setTitle(p.getTitle());
+                // 截取前 50 字做摘要
+                String content = p.getContent();
+                if (content != null && content.length() > 50) {
+                    content = content.substring(0, 50) + "...";
+                }
+                vo.setContent(content);
+                vo.setUserId(p.getUserId());
+                vo.setLikeCount(p.getLikeCount());
+
+                // 实时统计评论数
+                long actualCommentCount = postCommentsService.count(
+                        new LambdaQueryWrapper<PostComments>().eq(PostComments::getPostId, p.getPostId())
+                );
+                vo.setCommentCount((int) actualCommentCount);
+
+                // 实时统计附件数
+                long actualAttachmentCount = postAttachmentsService.count(
+                        new LambdaQueryWrapper<PostAttachments>().eq(PostAttachments::getPostId, p.getPostId())
+                );
+                vo.setAttachmentCount((int) actualAttachmentCount);
+
+                vo.setViewCount(p.getViewCount());
+                vo.setCreatedAt(p.getCreatedAt());
+
+                // 设置标签
+                if (p.getTags() != null && !p.getTags().trim().isEmpty()) {
+                    try {
+                        List<String> tags = JSON.parseArray(p.getTags(), String.class);
+                        vo.setTags(tags);
+                    } catch (Exception e) {
+                        vo.setTags(Collections.emptyList());
+                    }
+                } else {
                     vo.setTags(Collections.emptyList());
                 }
-            } else {
-                System.out.println("帖子 " + p.getPostId() + " 没有标签");
-                vo.setTags(Collections.emptyList());
-            }
-            
-            // 设置发帖人信息
-            if (p.getUserId() != null) {
-                try {
-                    Consumer user = consumerService.getById(p.getUserId());
-                    if (user != null) {
-                        vo.setUsername(user.getUsername());
-                        vo.setUserAvatar(user.getAvator());
-                        System.out.println("设置用户名: " + user.getUsername() + " for post: " + p.getPostId());
-                    } else {
-                        System.out.println("未找到用户: " + p.getUserId());
+
+                // 查发帖人信息
+                if (p.getUserId() != null) {
+                    try {
+                        Consumer user = consumerService.getById(p.getUserId());
+                        if (user != null) {
+                            vo.setUsername(user.getUsername());
+                            vo.setUserAvatar(user.getAvator());
+                        } else {
+                            vo.setUsername("用户" + p.getUserId());
+                        }
+                    } catch (Exception e) {
                         vo.setUsername("用户" + p.getUserId());
                     }
-                } catch (Exception e) {
-                    System.err.println("获取用户信息失败: " + e.getMessage());
-                    vo.setUsername("用户" + p.getUserId());
+                } else {
+                    vo.setUsername("匿名用户");
                 }
-            } else {
-                vo.setUsername("匿名用户");
-            }
-            
-            return vo;
-        }).collect(Collectors.toList());
-    }
+                return vo;
+            }).collect(Collectors.toList());
+
+            // 5. 组装最终结果返回给 Controller
+            Map<String, Object> result = new HashMap<>();
+            result.put("records", voList);          // 当前页的数据
+            result.put("total", postPage.getTotal()); // 满足条件的数据总条数
+
+            return result;
+        }
 
 
     @Transactional(rollbackFor = Exception.class)
