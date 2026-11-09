@@ -5,19 +5,23 @@ declare module "*.vue" {
   export default component;
 }
 
-declare module "vue/types/vue" {
-  import VueRouter, { Route } from "vue-router";
+declare module "@vue/runtime-core" {
+  import type { Router, RouteLocationNormalizedLoaded } from "vue-router";
 
-  interface Vue {
-    $router: VueRouter;
-    $route: Route;
+  interface ComponentCustomProperties {
+    $router: Router;
+    $route: RouteLocationNormalizedLoaded;
   }
 }
 
-interface ResponseBody {
-  code: string;
-  success: boolean;
-  message: string;
-  type: string;
-  data?: any;
+declare global {
+  interface ResponseBody {
+    code: string;
+    success: boolean;
+    message: string;
+    type: string;
+    data?: any;
+  }
 }
+
+export {};

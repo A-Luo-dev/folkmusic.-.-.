@@ -2,7 +2,8 @@ import axios from "axios";
 import router from "@/router";
 import { ElMessage } from "element-plus";
 
-const BASE_URL = process.env.NODE_HOST;
+// Use a same-origin API prefix so the Vue CLI dev server can proxy requests.
+const BASE_URL = "/api";
 
 axios.defaults.timeout = 1000000; // 超时时间
 axios.defaults.withCredentials = true; // 允许跨域
